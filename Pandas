@@ -1,0 +1,132 @@
+using System;
+using System.Collections.Generic; 
+public class Program 
+{
+    public class Panda
+    {
+        public int x;
+        public int y;
+        public Gender pandaGender;
+
+        public Panda(int x, int y, Gender pandaGender)
+        {
+            this.x = x;
+            this.y = y;
+            this.pandaGender = pandaGender;
+        }
+    }
+    public class PandaComparer : IComparer<Pair>
+    {
+        public int Compare(Pair pair1, Pair pair2)
+        {
+            return (int)(pair1.distance - pair2.distance);
+        }
+    }
+
+
+    public class Pair : IComparable<Pair>
+    {
+        public Panda malePanda;
+        public Panda femalePanda;
+        public double distance;
+
+        public Pair(Panda x, Panda y, double distance)
+        {
+            this.malePanda = x;
+            this.femalePanda = y;
+            this.distance = distance;
+        }
+
+        public int CompareTo(Pair other)
+        {
+            if (other is null) throw new ArgumentException("Некорректное значение параметра");
+            return (int)(distance - other.distance);
+        }
+    }
+
+    public enum Gender
+    {
+        male,
+        female,
+    }
+
+    public static void Main()
+    {
+        var malePandaList = new List<Panda>();
+        var femalePandaList = new List<Panda>();
+        var pandaPair = new List<Pair>();
+        while (true)
+        {
+            var text = Console.ReadLine();
+            if (text == "end")
+                break;
+            var accountArray = text.Split(' ');
+            if (accountArray.Length != 3)
+            {
+                continue;
+            }
+            Gender result;
+            Enum.TryParse<Gender>(accountArray[2], out result);
+            if (result == Gender.male)
+                malePandaList.Add(new Panda ( int.Parse(accountArray[0]), int.Parse(accountArray[1]), result));
+            if (result == Gender.female)
+                femalePandaList.Add(new Panda(int.Parse(accountArray[0]), int.Parse(accountArray[1]), result));
+        }
+
+        var pandasCount = malePandaList.Count + femalePandaList.Count;
+        Console.WriteLine($"Total pandas count: {pandasCount}");
+
+        foreach (var pandaMale in malePandaList)
+        {
+            foreach (var pandaFemale in femalePandaList)
+            {
+                var distance = Math.Round(FindDistance(pandaMale, pandaFemale), 2);
+                pandaPair.Add(new Pair(pandaMale, pandaFemale, distance));
+            }
+        }
+        pandaPair.Sort(new PandaComparer());
+        var pairList = new List<Pair>();
+
+        foreach (var pair in pandaPair)
+        {
+            bool adding = true;
+            foreach (var pairL in pairList)
+            {
+                if (pair.malePanda == pairL.malePanda || pair.femalePanda == pairL.femalePanda)
+                {
+                    adding = false;
+                }
+            }
+            if (adding)
+                {
+                    pairList.Add(pair);
+                    malePandaList.Remove(pair.malePanda);
+                    femalePandaList.Remove(pair.femalePanda);
+                }
+        }
+        
+        if (malePandaList.Count > femalePandaList.Count)
+        {
+            foreach (var panda in malePandaList)
+                Console.WriteLine($"Lonely {panda.pandaGender} panda at X: {panda.x}, Y: {panda.y}");
+        }
+        else if (femalePandaList.Count > malePandaList.Count)
+        {
+            foreach (var panda in femalePandaList)
+                Console.WriteLine($"Lonely {panda.pandaGender} panda at X: {panda.x}, Y: {panda.y}");
+        }
+
+        foreach (var pairL in pairList)
+        {
+            Console.WriteLine($"Pandas pair at distance {pairL.distance}, male panda at X: {pairL.malePanda.x}, Y: {pairL.malePanda.y}, female panda at X: {pairL.femalePanda.x}, Y: {pairL.femalePanda.y}");
+        }
+    }
+
+    public static double FindDistance(Panda pandaMale, Panda pandaFemale)
+    {
+        var distanceX = pandaMale.x - pandaFemale.x;
+        var distanceY = pandaMale.y - pandaFemale.y;
+        var answer = Math.Sqrt(Math.Pow(distanceX, 2) + Math.Pow(distanceY, 2));
+        return answer;
+    }
+}
